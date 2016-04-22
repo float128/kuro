@@ -81,32 +81,6 @@ kuro::util::idata kuro::object::triangle::intersect(kuro::math::ray4f ir, vec4f*
 
             data.hit = true;
         }
-		/*
-		else
-		{
-			data.p = ir.p + (ir.d * x);
-			data.n = n;
-
-			kuro::math::vec2f uv = uv_coords(origin, u, v, data.p);
-
-			if((uv.x >= 0)&&(uv.y >= 0)&&(uv.x + uv.y <= 1.0))
-			{
-				vec4f bryc_coords = kuro::math::m_util::barycentric(vertices[point[0]],
-															vertices[point[1]],
-															vertices[point[2]],
-															data.p);
-
-				print(vertices[point[0]]);cout<<endl;
-				print(vertices[point[1]]);cout<<endl;
-				print(vertices[point[2]]);cout<<endl;
-				print(data.p);cout<<endl;
-				print(bryc_coords);cout<<endl;
-				cout<< bryc_coords.x + bryc_coords.y + bryc_coords.z <<endl;
-
-				system("pause");
-			}
-		}
-		*/
     }
 
     return data;

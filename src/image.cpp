@@ -38,6 +38,7 @@ uint image::image::height()
 
 void image::image::resize(uint w, uint h)
 {
+	/*deletes all columns of pixels*/
     if(height() > 0)
     {
         for(int i = 0;i<width();i++)
@@ -46,8 +47,10 @@ void image::image::resize(uint w, uint h)
         }
     }
 
+	/*resizes row of columns of pixels*/
     columns.resize(w);
 
+	/*resizes each column of pixels*/
     for(int i = 0;i<w;i++)
     {
         columns[i].resize(h);
@@ -58,7 +61,7 @@ void kuro::image::base::gamma_correction(kuro::util::real correction_value)
 {
 	rgba value;
 
-
+	/*gamma corrects every value by an input factor*/
 	for(int j = 0;j<height();j++)
 	{
 		for(int i = 0;i<width();i++)

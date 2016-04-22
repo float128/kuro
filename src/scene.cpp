@@ -9,15 +9,15 @@ using namespace kuro;
 using namespace kuro::util;
 using namespace kuro::math;
 
-/*returns the intersection with
-the scene (collection of object)*/
 idata scene::scene::intersect(ray4f ir)
 {
     idata data;
     idata tmp_data;
 
     data.hit = false;
-
+	
+	/*tests each object within the scene for an intersection
+	and returns the closest intersection*/
     for(object::base* obj = object;obj!=NULL;obj=obj->next)
     {
         tmp_data = obj->intersect(ir);
@@ -27,6 +27,8 @@ idata scene::scene::intersect(ray4f ir)
         if((len(tmp_data.p - ir.p)<len(data.p - ir.p))||(!data.hit))data = tmp_data;
     }
 
+	/*flips the normals to ensure they face towards
+	the input ray*/
     if(data.hit)data.n = flip_normal(data.n, ir.d);
 
     return data;

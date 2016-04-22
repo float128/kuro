@@ -248,7 +248,6 @@ namespace kuro
                             kuro::util::real theta = axis.w;
                             axis.w = 0.0f;
 
-                            //mesh->rotate(-1.0*axis, theta);
 							mesh->rotate(axis, theta);
                         }
 
@@ -256,10 +255,6 @@ namespace kuro
 						{
 							std::cout<<"scale"<<endl;
                             vec4f sf = parse_transform(next);
-
-                            //sf.x = 1.0f/sf.x;
-                            //sf.y = 1.0f/sf.y;
-                            //sf.z = 1.0f/sf.z;
 
 							mesh->scale(sf);
 						}
@@ -274,8 +269,6 @@ namespace kuro
                     }
 
                     if(mesh->vnormals.size() == 0)mesh->smooth_shading = false;
-
-                    //mesh->apply_transformation();
 
                     if(!max_depth_set)
                     {

@@ -20,6 +20,7 @@ std::string kuro::xml::util::read_file(std::string filename)
 
     if(file==NULL)return data;
 
+	/*reads the file character by character*/
     while(true)
     {
         c = getc (file);

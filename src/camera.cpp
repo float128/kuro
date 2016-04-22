@@ -53,6 +53,7 @@ ray4f kuro::camera::lens_camera::get_ray(vec2f screen_pos)
 {
 	screen_pos = -1.0 * screen_pos;
 
+	/*produces a random point on a lens*/
 	real theta = util::random::real_random()*2.0*math::PI;
 	vec4f sensor_pos = vec4f(0.5*screen_pos.x*s_width, 0.5*screen_pos.y*s_height, -lens_distance);
 	vec4f lens_pos = radius*util::random::real_random() * vec4f(cos(theta), sin(theta));
@@ -60,12 +61,14 @@ ray4f kuro::camera::lens_camera::get_ray(vec2f screen_pos)
 	vec4f focal_length_pos = focal_length * focal_length_dir;
 
 	vec4f d = focal_length_pos - lens_pos;
-
+	/*transforms the position of the camera to world coordinates
+	from relative coordinates*/
 	lens_pos = p + (axis[0]*lens_pos.x) + 
 				   (axis[1]*lens_pos.y) + 
 				   (axis[2]*lens_pos.z);
 	
-
+	/*transforms the direction of the ray to world coordinates
+	from relative coordinates*/
     d = (axis[0]*d.x) + (axis[1]*d.y) + (axis[2]*d.z);
 
 	//normalise the direction

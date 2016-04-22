@@ -113,9 +113,8 @@ idata object::line::intersect(ray4f ir)
 vec2f linear_solve(real a, real b, real c, real d, real u, real v)
 {
     vec2f s;
-
-
-
+	/*solves a simulataneous equation of two variables
+	and stores the results in s.x and s.y*/
     s.x = v - ((d*u)/b);
     s.x /= c - ((d*a)/b);
     s.y = (u - (a*s.x))/b;

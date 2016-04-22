@@ -20,63 +20,23 @@
 #include "mat4f.h"
 #include "object.h"
 
-/*
-kuro::util::idata kuro::object::mesh::intersect(kuro::math::ray4f ir, octree* ioctree)
-{
-    idata data;
-    idata tmp_data;
-
-    data.hit = false;
-
-    if(ioctree == NULL)return data;
-
-    for(kuro::util::uint i = 0;i < ioctree->faces.size();i++)
-    {
-        tmp_data = triangles[ioctree->faces[i]].intersect(ir, &vertices[0]);
-
-        if(!tmp_data.hit)continue;
-
-        if((len(tmp_data.p - ir.p)<len(data.p - ir.p))||(!data.hit))data = tmp_data;
-    }
-
-    data.hit_object = this;
-
-    return data;
-}
-*/
-/*
 kuro::util::idata kuro::object::mesh::intersect(kuro::math::ray4f ir)
 {
-
     idata data;
     idata tmp_data;
 
     data.hit = false;
 
-    data = octree_intersect(ir, &mesh_octree);
-    //data = intersect(ir, &mesh_octree);
-    data.hit_object = this;
-
-    return data;
-}
-*/
-
-kuro::util::idata kuro::object::mesh::intersect(kuro::math::ray4f ir)
-{
-
-    idata data;
-    idata tmp_data;
-
-    data.hit = false;
-
-    //if(!bounding_box.intersect(ir))return data;
-
+	/*tests for an intersection with every triangle
+	belonging to the mesh*/
     for(kuro::util::uint i = 0;i < triangles.size();i++)
     {
         tmp_data = triangles[i].intersect(ir, &vertices[0]);
 
         if(!tmp_data.hit)continue;
 
+		/*finds the closest intersection to the position
+		of the ray*/
         if((len(tmp_data.p - ir.p)<len(data.p - ir.p))||(!data.hit))data = tmp_data;
     }
 
@@ -87,13 +47,8 @@ kuro::util::idata kuro::object::mesh::intersect(kuro::math::ray4f ir)
 
 void kuro::object::mesh::translate(vec4f delta)
 {
-    /*
-    for(kuro::util::real i = 0;i<vertices.size();i++)
-    {
-        vertices[i] = vertices[i] + delta;
-        vertices[i].w = 0.0;
-    }
-    */
+	/*updates the transformation matrix to include
+	the translation*/
     mat4f M = math::transform::translate(delta);
 	mat4f inv_M = math::transform::translate(delta * -1.0);
 
@@ -103,14 +58,8 @@ void kuro::object::mesh::translate(vec4f delta)
 
 void kuro::object::mesh::rotate(vec4f i_axis, kuro::util::real theta)
 {
-    /*
-    kuro::math::mat4f M = kuro::math::transform::rotate(axis, theta);
-
-    for(kuro::util::real i = 0;i<vertices.size();i++)
-    {
-        vertices[i] = M * vertices[i];
-    }
-    */
+	/*updates the transformation matrix to include
+	the rotation*/
     mat4f M = kuro::math::transform::rotate(i_axis, theta);
 	mat4f inv_M = kuro::math::transform::rotate(i_axis, -theta);
 
@@ -120,21 +69,14 @@ void kuro::object::mesh::rotate(vec4f i_axis, kuro::util::real theta)
 
 void kuro::object::mesh::scale(vec4f scale_factor)
 {
-    /*
-    for(kuro::util::real i = 0;i<vertices.size();i++)
-    {
-        vertices[i].x *= scale_factor.x;
-        vertices[i].y *= scale_factor.y;
-        vertices[i].z *= scale_factor.z;
-        vertices[i].w *= scale_factor.w;
-    }
-    */
     mat4f M = math::transform::scale(scale_factor);
 
 	scale_factor.x = 1.0/scale_factor.x;
 	scale_factor.y = 1.0/scale_factor.y;
 	scale_factor.z = 1.0/scale_factor.z;
-
+	
+	/*updates the transformation matrix to include
+	the scaling of the mesh*/
 	mat4f inv_M = math::transform::scale(scale_factor);
 
 	transform_matrix = transform_matrix * M;
@@ -143,6 +85,8 @@ void kuro::object::mesh::scale(vec4f scale_factor)
 
 void kuro::object::mesh::apply_transformation()
 {
+	/*applies the transformation matrix to every vertex
+	belonging to the mesh*/
     for(kuro::util::real i = 0;i<vertices.size();i++)
     {
         vertices[i].w = 1.0;
@@ -150,41 +94,6 @@ void kuro::object::mesh::apply_transformation()
         vertices[i].w = 0.0;
     }
 }
-
-/*
-kuro::util::idata kuro::object::mesh::octree_intersect(kuro::math::ray4f ir, octree* ioctree)
-{
-    kuro::util::idata data;
-    kuro::util::idata tmp_data;
-    data.hit = false;
-
-    if(!ioctree->bounding_box.intersect(ir))return data;
-
-    if(ioctree->leaf)
-    {
-        //cout<< "leaf: " << ioctree->faces.size() <<endl;
-        return intersect(ir, ioctree);
-    }
-
-    for(int i = 0;i<=1;i++)
-    {
-        for(int j = 0;j<=1;j++)
-        {
-            for(int k = 0;k<=1;k++)
-            {
-
-                tmp_data = octree_intersect(ir, ioctree->child[i][j][k]);
-
-                if(!tmp_data.hit)continue;
-
-                if((len(tmp_data.p - ir.p)<len(data.p - ir.p))||(!data.hit))data = tmp_data;
-            }
-        }
-    }
-
-    return data;
-}
-*/
 
 bool kuro::object::mesh::import(string filename)
 {
@@ -197,6 +106,7 @@ bool kuro::object::mesh::import(string filename)
     kuro::math::vec4f v;
     kuro::object::triangle tri;
 
+	/*reads the file line by line*/
     while(file)
     {
         getline(file, line);
@@ -205,15 +115,11 @@ bool kuro::object::mesh::import(string filename)
         sscanf(line.c_str(), "%s", buffer);
         string type = buffer;
 
-        //cout<< type << "\t" << line <<endl;
-
+		/*checks if the first charactor of the line is 'v'*/
         if(type == "v")
         {
             float number[3];
             sscanf(line.c_str(), "%s %f %f %f", buffer, &number[0], &number[1], &number[2]);
-            //cout<< "number0: " <<number[0] <<endl;
-            //cout<< "number1: " <<number[1] <<endl;
-            //cout<< "number2: " <<number[2] <<endl;
 
             v.x = number[0];
             v.y = number[1];
@@ -222,23 +128,20 @@ bool kuro::object::mesh::import(string filename)
             vertices.push_back(v);
         }
 
+		/*checks if the first charactor of the line is 'vt'*/
         if(type == "vt")
         {
             float number[2];
             sscanf(line.c_str(), "%s %f %f", buffer, &number[0], &number[1]);
-            //cout<< "number0: " <<number[0] <<endl;
-            //cout<< "number1: " <<number[1] <<endl;
 
             include_vt = true;
         }
 
+		/*checks if the first charactor of the line is 'vn'*/
         if(type == "vn")
         {
             float number[3];
             sscanf(line.c_str(), "%s %f %f %f", buffer, &number[0], &number[1], &number[2]);
-            //cout<< "number0: " <<number[0] <<endl;
-            //cout<< "number1: " <<number[1] <<endl;
-            //cout<< "number2: " <<number[2] <<endl;
 
 			v.x = number[0];
             v.y = number[1];
@@ -249,6 +152,7 @@ bool kuro::object::mesh::import(string filename)
             include_vn = true;
         }
 
+		/*checks if the first charactor of the line is 'f'*/
         if(type == "f")
         {
             int vertex[3] = {0, 0, 0};
@@ -302,6 +206,8 @@ bool kuro::object::mesh::import(string filename)
                 }
             }
 
+			/*subtracts one from the indices for the vertices,
+			vertex normals, vertex textures etc. for the faces*/
             vertex[0]--;
             vertex[1]--;
             vertex[2]--;
@@ -313,19 +219,7 @@ bool kuro::object::mesh::import(string filename)
             vertex_texture[0]--;
             vertex_texture[1]--;
             vertex_texture[2]--;
-            /*
-            cout<< "vertex[0] = " << vertex[0] <<endl;
-            cout<< "vertex[1] = " << vertex[1] <<endl;
-            cout<< "vertex[2] = " << vertex[2] <<endl;
 
-            cout<< "vertex[_normal0] = " << vertex_normal[0] <<endl;
-            cout<< "vertex_normal[1] = " << vertex_normal[1] <<endl;
-            cout<< "vertex_normal[2] = " << vertex_normal[2] <<endl;
-
-            cout<< "vertex_texture[0] = " << vertex_texture[0] <<endl;
-            cout<< "vertex_texture[1] = " << vertex_texture[1] <<endl;
-            cout<< "vertex_texture[2] = " << vertex_texture[2] <<endl;
-            */
             tri.point[0] = vertex[0];
             tri.point[1] = vertex[1];
             tri.point[2] = vertex[2];
@@ -352,6 +246,8 @@ kuro::object::bbox kuro::object::mesh::calculateBB()
     bounding_box.low = vec4f(INFINITY, INFINITY, INFINITY);
     bounding_box.high = vec4f(-INFINITY, -INFINITY, -INFINITY);
 
+	/*works out the bounding box of the mesh by finding the largest and smallest
+	boundaries for the X, Y and Z axes.*/
     for(int i = 0;i<vertices.size();i++)
     {
         if(vertices[i].x < bounding_box.low.x) bounding_box.low.x = vertices[i].x;
@@ -365,11 +261,5 @@ kuro::object::bbox kuro::object::mesh::calculateBB()
 
     return bounding_box;
 }
-/*
-void kuro::object::mesh::partition()
-{
-    mesh_octree.partition(&vertices, &triangles, NULL, 4);
-}
-*/
 
 #endif

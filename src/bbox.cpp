@@ -21,18 +21,23 @@ kuro::util::idata kuro::object::bbox::intersect(kuro::math::ray4f ir, kuro::math
     kuro::math::vec4f u = b - a;
     kuro::math::vec4f v = c - a;
 
+    /*works out the normal of the triangle*/
     kuro::math::vec4f n = cross(u, v);
 
+    /*works out the distance to the point of intersection*/
     kuro::util::real x = dot(origin - ir.p, n)/dot(ir.d, n);
 
     data.distance = x;
 
+    /*works out the point of intersection and the normal
+    at the point of intersection*/
     data.p = ir.p + (ir.d * x);
     data.n = n;
 
 
     kuro::math::vec2f uv = uv_coords(origin, u, v, data.p);
 
+    /*tests if the point lies in the triangle*/
     if((uv.x >= 0)&&(uv.y >= 0)&&(uv.x + uv.y <= 1.0))
     {
             data.hit = true;
@@ -43,24 +48,14 @@ kuro::util::idata kuro::object::bbox::intersect(kuro::math::ray4f ir, kuro::math
 
 bool kuro::object::bbox::intersect(kuro::math::ray4f ir)
 {
+    /*
+    following code was obtained from and modified on the following site:
+    http://people.csail.mit.edu/amy/papers/box-jgt.pdf
+    */
     kuro::util::real tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     vec4f* bounds[2];
     int sign[3];
-    /*
-    bbox bb;
-    bb.low = low;
-    bb.high = high;
-
-	vec4f delta = high - low;
-	delta = delta * 0.0f;
-
-	bb.high = bb.high + delta;
-	bb.low = bb.low - delta;
-
-    bounds[0] = &bb.low;
-    bounds[1] = &bb.high;
-    */
 
     bounds[0] = &low;
     bounds[1] = &high;
@@ -91,24 +86,14 @@ bool kuro::object::bbox::intersect(kuro::math::ray4f ir)
 
 bool kuro::object::bbox::intersect(kuro::math::ray4f ir, kuro::util::real* distance)
 {
+    /*
+    following code was obtained from and modified on the following site:
+    http://people.csail.mit.edu/amy/papers/box-jgt.pdf
+    */
 	kuro::util::real tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     vec4f* bounds[2];
     int sign[3];
-    /*
-    bbox bb;
-    bb.low = low;
-    bb.high = high;
-
-	vec4f delta = high - low;
-	delta = delta * 0.0f;
-
-	bb.high = bb.high + delta;
-	bb.low = bb.low - delta;
-
-    bounds[0] = &bb.low;
-    bounds[1] = &bb.high;
-    */
 
     bounds[0] = &low;
     bounds[1] = &high;
@@ -145,6 +130,10 @@ bool kuro::object::bbox::intersect(kuro::math::vec4f a, kuro::math::vec4f b)
 {
     kuro::math::ray4f ir(a, b - a);
 
+    /*
+    following code was obtained from and modified on the following site:
+    http://people.csail.mit.edu/amy/papers/box-jgt.pdf
+    */
     kuro::util::real tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     vec4f* bounds[2];
@@ -179,6 +168,8 @@ bool kuro::object::bbox::intersect(kuro::math::vec4f a, kuro::math::vec4f b)
 
 bool kuro::object::bbox::in_bb(vec4f p)
 {
+    /*tests the components of the input point lie in
+    the respective bound for each axis*/
     return  (p.x >= low.x)&&(p.x <= high.x)&&
             (p.y >= low.y)&&(p.y <= high.y)&&
             (p.z >= low.z)&&(p.z <= high.z);
@@ -188,16 +179,22 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c)
 {
     bbox bb;
 
+    /*increases the size of the bounding box to
+    reduce numerical errors*/
 	vec4f delta = high - low;
 	delta = delta * 0.001;
 
 	bb.high = high + delta;
 	bb.low = low - delta;
 
+    /*tests if any of the points of the triangle
+    lie in the bounding box*/
     if(in_bb(a))return true;
     if(in_bb(b))return true;
     if(in_bb(c))return true;
 
+    /*test if any of the edges of the triangle
+    intersect with the bounding box*/
     if(intersect(a, b))return true;
     if(intersect(a, c))return true;
     if(intersect(b, c))return true;
@@ -209,6 +206,7 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c)
 
     triangle t(0, 1, 2);
 
+    /*constructs the vertices of the bounding box*/
     for(int i = 0;i<=1;i++)
     {
         for(int j = 0;j<=1;j++)
@@ -249,6 +247,7 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c)
 
     int count = 0;
 
+    /*constructs the edges of the bounding box*/
     for(int i = 0;i<2;i++)
     {
         for(int j = 0;j<2;j++)
@@ -268,6 +267,8 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c)
     square[1][3] = square[1][2];
     square[1][2] = tmp;
 
+    /*tests if any of the edges of the bounding box
+    intersect with the triangle*/
     for(int k = 0;k<3;k++)
     {
         for(int i = 0;i<4;i++)
@@ -305,12 +306,16 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c, kuro::util::ui
 {
     bbox bb;
 
+    /*increases the size of the bounding box
+    to reduce numerical errors*/
 	vec4f delta = high - low;
 	delta = delta * 0.001;
 
 	bb.high = high + delta;
 	bb.low = low - delta;
 
+    /*tests if any of the points of the
+    triangle lie in the bounding box*/
     if(bb.in_bb(a))return true;
     if(bb.in_bb(b))return true;
     if(bb.in_bb(c))return true;
@@ -318,6 +323,7 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c, kuro::util::ui
     vec4f verts[2][2][2];
     kuro::util::idata data;
 
+    /*constructs the vertices of the bounding box*/
     for(int i = 0;i<=1;i++)
     {
         for(int j = 0;j<=1;j++)
@@ -360,6 +366,7 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c, kuro::util::ui
 
     vec4f n;
 
+    /*finds the normal of the axis of splitting*/
     if(axis == 0)
     {
         n = vec4f(1.0);
@@ -373,6 +380,9 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c, kuro::util::ui
         n = vec4f(0.0, 0.0, 1.0);
     }
 
+    /*tests if any of the vertices of the bounding
+    box lie at the two different sides of the triangle
+    */
     for(int i = 0;i<=1;i++)
     {
         for(int j = 0;j<=1;j++)
@@ -380,8 +390,6 @@ bool kuro::object::bbox::tri_intersect(vec4f a, vec4f b, vec4f c, kuro::util::ui
             for(int k = 0;k<=1;k++)
             {
                 data = intersect(ray4f(verts[i][j][k], n), a, b, c);
-
-                //cout<< data.distance<<endl;
 
                 if(data.hit)
                 {

@@ -47,21 +47,7 @@ kuro::math::mat4f kuro::math::transform::rotate(vec4f axis, kuro::util::real the
                0.0f,
                0.0f, 0.0f, 0.0f, 1.0f};
 
-/*
-    mat4f M = {c + ((axis.x*axis.x)*(1.0f - c)),
-               (axis.x*axis.y*(1.0f - c)) - (axis.z * s),
-               (axis.x*axis.z*(1.0f - c)) - (axis.y * s),
-               0.0f,
-               (axis.y*axis.x*(1.0f - c)) - (axis.z * s),
-               c + ((axis.y*axis.y)*(1.0f - c)),
-               (axis.y*axis.z*(1.0f - c)) - (axis.x * s),
-               0.0f,
-               (axis.z*axis.x*(1.0f - c)) - (axis.y * s),
-               (axis.z*axis.y*(1.0f - c)) - (axis.x * s),
-               c + ((axis.z*axis.z)*(1.0f - c)),
-               0.0f,
-               0.0f, 0.0f ,0.0f, 1.0f};
-*/
+
     return M;
 }
 

@@ -15,10 +15,11 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
 
     leaf = false;
 
+    /*the function exits if the node contains less
+    than 4 triangles of if the max depth
+    has been met*/
     if(faces.size() <= 4)leaf = true;
     if(depth >= max_depth)leaf = true;
-
-    //cout<<"node: depth="<<depth<<" faces="<<faces.size()<<" leaf="<<leaf<<endl;
 
     if(leaf)return;
 
@@ -26,11 +27,16 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
     kuro::math::vec4f mid_point;
     kuro::util::uint axis;
 
+    /*the size of the bounding box is increased to
+    reduce numerical error*/
     delta = bounding_box.high - bounding_box.low;
 
     mid_point = bounding_box.high + bounding_box.low;
     mid_point = mid_point * 0.5;
 
+    /*new child nodes are created for the
+    current node and the settings are
+    applied*/
     child[0] = new binary_tree_cache;
     child[1] = new binary_tree_cache;
 
@@ -40,6 +46,8 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
     child[0]->bounding_box = bounding_box;
     child[1]->bounding_box = bounding_box;
 
+    /*the bounding boxes of the 2 new
+    child nodes are constructed*/
     if(delta.x >= delta.y)
     {
         if(delta.x >= delta.z)
@@ -71,19 +79,24 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
         }
     }
 
+    /*every triangle belonging to the node
+    is split between the 2 child nodes*/
     for(int i = 0;i<faces.size();i++)
     {
         vec4f a, b, c;
 
+        /*the vertices of a triangle*/
         a = m->vertices[m->triangles[faces[i]].point[0]];
         b = m->vertices[m->triangles[faces[i]].point[1]];
         c = m->vertices[m->triangles[faces[i]].point[2]];
 
+        /*test if the triangle intersects with the
+        first child node*/
         if(child[0]->bounding_box.tri_intersect(a, b, c))
         {
-            //cout<<"child 0" <<endl;
             child[0]->faces.push_back(faces[i]);
-
+            /*tests if the triangle intersects with the
+            second child node*/
             if(child[1]->bounding_box.tri_intersect(a, b, c))
             {
                 child[1]->faces.push_back(faces[i]);
@@ -91,14 +104,14 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
         }
         else
         {
-            //cout<<"child 1" <<endl;
-
             child[1]->faces.push_back(faces[i]);
         }
     }
 
     faces.clear();
 
+    /*deletes the first child node if it has no
+    faces*/
     if(child[0]->faces.size() == 0)
     {
         delete child[0];
@@ -106,9 +119,12 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
     }
     else
     {
+        /*partitions the first child node*/
         child[0]->partition(m, max_depth);
     }
 
+    /*deletes the second child node if it has no
+    faces*/
     if(child[1]->faces.size() == 0)
     {
         delete child[1];
@@ -116,28 +132,24 @@ void kuro::object::binary_tree::partition(mesh* m, kuro::util::uint max_depth)
     }
     else
     {
+        /*partitions the second child*/
         child[1]->partition(m, max_depth);
     }
 }
 
 void kuro::object::binary_tree_cache::save(ofstream& file, int side)
 {
-    /*
-    print(bounding_box.low);
-    cout<< " ";
-    print(bounding_box.high);
-    cout<< " ";
-    cout<< "faces=" << faces.size();
-    cout<< " leaf=" << leaf;
-    cout<< " depth=" << depth;
-    cout<< endl;
-    */
-
+    /*saves the depth of the node, and its side
+    in a binary tree*/
     file << depth << " ";
     file << side;
 
+    /*prevents the printing of a space when no
+    faces are present in the node*/
     if(faces.size() > 0)file << " ";
 
+    /*prints all the faces belonging to the
+    node*/
     for(int i = 0;i<faces.size();i++)
     {
         file<< faces[i];
@@ -146,6 +158,7 @@ void kuro::object::binary_tree_cache::save(ofstream& file, int side)
 
     file << endl;
 
+    /*saves the child nodes of the node*/
     if(child[0] != NULL)child[0]->save(file, 0);
     if(child[1] != NULL)child[1]->save(file, 1);
 }
@@ -169,17 +182,14 @@ void kuro::object::binary_tree_cache::load(string line, binary_tree_cache* ipare
             if((i == line.size()-1))buffer += line[i];
 
             value = atoi(buffer.c_str());
-            //cout<< "buffer: '" << value << "'" <<endl;
 
             if(count == 0)
             {
                 depth = value;
-                //cout<< "load depth: " << depth;
             }
             else if(count == 1)
             {
                 side = value;
-                //cout<< " load side: " <<side<< " iparent=" << iparent <<endl;
             }
             else
             {
@@ -267,6 +277,9 @@ kuro::util::idata kuro::object::btree_mesh::intersect(kuro::math::ray4f ir)
     ir.p.w = 1.0;
     ir.d.w = 1.0;
 
+	/*transforms the position and direction vectors by the transformation
+	matrix created from the transofrmations specified
+	by the user whilst adding the object*/
     ir.p = inv_transform_matrix * ir.p;
     ir.d = inv_transform_matrix * ir.d;
 	ir.d = ir.d - (inv_transform_matrix * vec4f(0.0, 0.0, 0.0, 1.0));
@@ -274,6 +287,7 @@ kuro::util::idata kuro::object::btree_mesh::intersect(kuro::math::ray4f ir)
 	ir.p.w = 0.0;
     ir.d.w = 0.0;
 
+	/*test for an intersecton with the bounding box of the mesh*/
 	if(!mesh_binary_tree.bounding_box.intersect(ir))return data;
 
     data = node_intersect(ir, &mesh_binary_tree);
@@ -284,7 +298,8 @@ kuro::util::idata kuro::object::btree_mesh::intersect(kuro::math::ray4f ir)
     {
         data.p.w = 1.0;
         data.n.w = 1.0;
-
+		/*transforms the position of intersection and
+		normal at the point of intersecton to world coordinates*/
         data.p = transform_matrix * data.p;
 
         data.n = transform_matrix * data.n;
@@ -304,6 +319,9 @@ kuro::util::idata kuro::object::btree_mesh::node_intersect(kuro::math::ray4f ir,
     kuro::util::idata data;
     data.hit = false;
 
+	/*recursive function exits if the node
+	is a leaf and tests for intersection with
+	the faces contained by the node*/
     if(node->leaf)
     {
         return faces_intersect(ir, node);
@@ -381,34 +399,6 @@ kuro::util::idata kuro::object::btree_mesh::node_intersect(kuro::math::ray4f ir,
 		}
 	}
 
-	/*
-    if(tmp_data[0].hit)
-    {
-        if(tmp_data[1].hit)
-        {
-            if( len(tmp_data[0].p - ir.p) <= len(tmp_data[1].p - ir.p) )
-            {
-                data = tmp_data[0];
-            }
-            else
-            {
-                data = tmp_data[1];
-            }
-        }
-        else
-        {
-            data = tmp_data[0];
-        }
-    }
-    else
-    {
-        if(tmp_data[1].hit)
-        {
-            data = tmp_data[1];
-        }
-    }
-	*/
-
     return data;
 }
 
@@ -419,8 +409,14 @@ kuro::util::idata kuro::object::btree_mesh::faces_intersect(kuro::math::ray4f ir
 
     data.hit = false;
 
+	/*tests if the input ray intersects with any of triangles
+	belonging to the input node*/
     for(kuro::util::uint i = 0;i < node->faces.size();i++)
     {
+		/*two different routines are used to test for an intersection
+		with a triangle, when smooth shading is enabled barycentric
+		coordinates are used to linearly interpolate the normals
+		at the vertices of the triangle*/
         if(smooth_shading)
         {
             tmp_data = triangles[node->faces[i]].intersect(ir, &vertices[0], &vnormals[0]);

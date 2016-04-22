@@ -16,10 +16,12 @@ void kuro::object::octree::calculateBB(vertices* ivertices)
 
     vec4f vertex;
 
+	/*calculates the bounds for each axis by considering 
+	each vertex...*/
     for(int i = 0;i<ivertices->size();i++)
     {
         vertex = (*ivertices)[i];
-
+		
         if(vertex.x < bounding_box.low.x) bounding_box.low.x = vertex.x;
         if(vertex.y < bounding_box.low.y) bounding_box.low.y = vertex.y;
         if(vertex.z < bounding_box.low.z) bounding_box.low.z = vertex.z;
@@ -34,6 +36,8 @@ void kuro::object::octree::partition(vertices* ivertices,
                                      triangles* itriangles,
                                      octree* ioctree, int max_depth)
 {
+	/*initiates the pointesr to the child nodes
+	no NULL*/
     for(int i = 0;i<=1;i++)
     {
         for(int j = 0;j<=1;j++)
@@ -45,12 +49,15 @@ void kuro::object::octree::partition(vertices* ivertices,
         }
     }
 
+	/*This code is applied to the root node*/
     if(ioctree == NULL)
     {
         depth = 0;
 
         calculateBB(ivertices);
-
+		
+		/*all the faces belonging to the mesh are added to
+		the node*/
         for(int i = 0;i<itriangles->size();i++)
         {
             faces.push_back(i);
@@ -62,14 +69,12 @@ void kuro::object::octree::partition(vertices* ivertices,
         if(leaf)return;
     }
 
-    //cout<< "starting... depth= " << depth <<endl;
-
     if(ioctree != NULL)
     {
+		/*tests if the triangles of the parent node belong the node,
+		if they do then they are added to the node*/
         for(int i = 0;i<ioctree->faces.size();i++)
         {
-            //cout<< i << " of "  << ioctree->faces.size() <<endl;
-
             vec4f a, b, c;
             a  = (*ivertices)[(*itriangles)[ioctree->faces[i]].point[0]];
             b = (*ivertices)[(*itriangles)[ioctree->faces[i]].point[1]];
@@ -82,8 +87,6 @@ void kuro::object::octree::partition(vertices* ivertices,
         }
     }
 
-    //cout<< "faces: " << faces.size() <<endl;
-
     leaf = false;
     if(faces.size() <= 16)leaf = true;
     if(depth >= max_depth)leaf = true;
@@ -94,6 +97,9 @@ void kuro::object::octree::partition(vertices* ivertices,
     delta = bounding_box.high - bounding_box.low;
     delta = delta * 0.5;
 
+	/*partitions the node by creating child nodes
+	and setting their bounding boxes to occupy a particular
+	space of the node*/
     for(int i = 0;i<=1;i++)
     {
         for(int j = 0;j<=1;j++)
